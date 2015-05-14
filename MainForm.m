@@ -93,6 +93,58 @@ function gradientButton_Callback(hObject, eventdata, handles)
     hold off;    
 end
 
+function hookeJeevesButton_Callback(hObject, eventdata, handles)
+    global NAMES% --- GLOBAL DEFINE   
+    global PARAMETERS% --- GLOBAL DEFINE   
+    global FUNCTION_EXPRESSION% --- GLOBAL DEFINE   
+    
+     % define symbolic variable  
+    for i = 1 : max(size(NAMES))                 
+        eval(sprintf('syms %s', NAMES{i}));
+        eval(sprintf('%s = %d;', NAMES{i}, PARAMETERS(i, 1))); 
+    end       
+    targetFunction = @(p) double( subs(FUNCTION_EXPRESSION, NAMES, p) );
+    
+    e  = str2double(get(handles.hookeJeevesPrecessionEdit, 'String'));%precession      
+    s = str2double(get(handles.hookeJeevesStepSizeEdit, 'String'));%step size     
+    mi = str2double(get(handles.hookeJeevesMaximumStepsEdit, 'String'));%max iterations
+    ss = max(size(NAMES));%space size
+    o = PARAMETERS(:, 1);%origin
+    lb = PARAMETERS(:, 2);%lower border
+    ub = PARAMETERS(:, 3);%upper border
+    
+    ms = zeros(ss, 1);
+    sa = zeros(ss, 1);%steps
+    
+    ms = ms + 1e-5;% minimum step size
+    sa = sa + s;% steps
+    
+    [X,BestF,Iters, path, values] = hookejeeves( ss, o, sa, ms, e, mi, lb, ub, targetFunction);  
+    
+    if(isequal(ss, 2))
+        set(handles.xMinEdit, 'String', X(1));
+        set(handles.yMinEdit, 'String', X(2));
+        set(handles.zMinEdit, 'String', BestF);
+    end
+    
+    disp('Result');
+    disp(['Best point ', mat2str(X)]);
+    disp(['Best value ', num2str(BestF)]);
+    disp(['Iterations ', num2str(Iters)]);
+    
+    hold on;
+    plot3(handles.mainAxes, path(1,:), path(2,:), values,...
+                    '--rs','LineWidth',1,...
+                    'MarkerEdgeColor','r',...
+                    'MarkerFaceColor','r',...
+                    'MarkerSize',2)
+    plot3(handles.mainAxes, X(1), X(2), BestF,...
+                    '--rs','LineWidth',5,...
+                    'MarkerEdgeColor','r',...
+                    'MarkerFaceColor','r',...
+                    'MarkerSize',10)
+    hold off;    
+end
 
 function setButton_Callback(hObject, eventdata, handles)
     global NAMES% --- GLOBAL DEFINE   
