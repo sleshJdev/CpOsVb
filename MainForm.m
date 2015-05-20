@@ -43,6 +43,11 @@ function bisectionButton_Callback(hObject, eventdata, handles)
     global PARAMETERS% --- GLOBAL DEFINE   
     global FUNCTION_EXPRESSION% --- GLOBAL DEFINE    
     
+    if ~isequal(max(size(NAMES)), 1)
+        msgbox( 'Function must have only one parameter!' , 'Bad function expression' ); 
+        return;
+    end
+    
     % define symbolic variable  
     for i = 1 : max(size(NAMES))                 
         eval(sprintf('syms %s', NAMES{i}));
@@ -55,6 +60,11 @@ function bisectionButton_Callback(hObject, eventdata, handles)
     
     targetFunction = @(x) double( subs(FUNCTION_EXPRESSION, NAMES, x) );    
     [~, ~, xMin, yMin] = bisection(minX, maxX, stepSize, targetFunction);
+    
+    set(handles.xMinEdit, 'String', xMin);
+    set(handles.yMinEdit, 'String', yMin);
+    set(handles.zMinEdit, 'String', '-');  
+    
     hold on;
     plot(handles.mainAxes, xMin, yMin, 'rs');
     hold off;
@@ -64,6 +74,11 @@ function gradientButton_Callback(hObject, eventdata, handles)
     global NAMES% --- GLOBAL DEFINE   
     global PARAMETERS% --- GLOBAL DEFINE   
     global FUNCTION_EXPRESSION% --- GLOBAL DEFINE   
+    
+    if ~isequal(max(size(NAMES)), 2)
+        msgbox( 'Function must have only two parameter!' , 'Bad function expression' ); 
+        return;
+    end
     
     ox = PARAMETERS(1, 1);    
     x1 = PARAMETERS(1, 2);
@@ -78,6 +93,10 @@ function gradientButton_Callback(hObject, eventdata, handles)
     sl = str2double(get(handles.gradientMaxStepQuantityEdit, 'String'));%step limit
     
     [vMin, ~, path] = gradient(FUNCTION_EXPRESSION, NAMES, x1, x2, y1, y2, e, ox, oy, s, sl);  
+    
+    set(handles.xMinEdit, 'String', vMin(1));
+    set(handles.yMinEdit, 'String', vMin(2));
+    set(handles.zMinEdit, 'String', vMin(3));  
     
     hold on;
     plot3(handles.mainAxes, path(1,:), path(2,:), path(3,:),...
@@ -98,7 +117,7 @@ function hookeJeevesButton_Callback(hObject, eventdata, handles)
     global PARAMETERS% --- GLOBAL DEFINE   
     global FUNCTION_EXPRESSION% --- GLOBAL DEFINE   
     
-     % define symbolic variable  
+    % define symbolic variable  
     for i = 1 : max(size(NAMES))                 
         eval(sprintf('syms %s', NAMES{i}));
         eval(sprintf('%s = %d;', NAMES{i}, PARAMETERS(i, 1))); 
@@ -119,18 +138,20 @@ function hookeJeevesButton_Callback(hObject, eventdata, handles)
     ms = ms + 1e-5;% minimum step size
     sa = sa + s;% steps
     
-    [X,BestF,Iters, path, values] = hookejeeves( ss, o, sa, ms, e, mi, lb, ub, targetFunction);  
-    
-    if(isequal(ss, 2))
-        set(handles.xMinEdit, 'String', X(1));
-        set(handles.yMinEdit, 'String', X(2));
-        set(handles.zMinEdit, 'String', BestF);
-    end
+    [X,BestF,Iters, path, values] = hookejeeves( ss, o, sa, ms, e, mi, lb, ub, targetFunction);    
     
     disp('Result');
     disp(['Best point ', mat2str(X)]);
     disp(['Best value ', num2str(BestF)]);
     disp(['Iterations ', num2str(Iters)]);
+    
+    if ~isequal(max(size(NAMES)), 2)        
+        return;
+    end
+    
+    set(handles.xMinEdit, 'String', X(1));
+    set(handles.yMinEdit, 'String', X(2));
+    set(handles.zMinEdit, 'String', BestF);  
     
     hold on;
     plot3(handles.mainAxes, path(1,:), path(2,:), values,...
@@ -144,6 +165,44 @@ function hookeJeevesButton_Callback(hObject, eventdata, handles)
                     'MarkerFaceColor','r',...
                     'MarkerSize',10)
     hold off;    
+end
+
+function steepestGradientButton_Callback(hObject, eventdata, handles)
+    global NAMES% --- GLOBAL DEFINE   
+    global PARAMETERS% --- GLOBAL DEFINE   
+    global FUNCTION_EXPRESSION% --- GLOBAL DEFINE 
+    
+    if ~isequal(max(size(NAMES)), 2)
+        msgbox( 'Function must have only two parameters!' , 'Bad function expression' ); 
+        return;
+    end
+    
+    originPoint = PARAMETERS(:, 1);%origin
+    lowerBorder = PARAMETERS(:, 2);%lower border
+    upperBorder = PARAMETERS(:, 3);%upper border
+    precession1 = str2double(get(handles.steepestGradientPrecessionByGradientLengthEdit, 'String')) ;
+    precession2 = str2double(get(handles.steepestGradientPrecessionByShiftEdit, 'String'));
+    limitSteps  = str2double(get(handles.steepestGradientMaxQuantityOfStepsEdit, 'String'));
+       
+    [bestPoint, bestValue, path, values, ~] =...
+        steepestGradient(FUNCTION_EXPRESSION, NAMES, originPoint, lowerBorder, upperBorder, precession1, precession2, limitSteps);
+    
+    set(handles.xMinEdit, 'String', bestPoint(1));
+    set(handles.yMinEdit, 'String', bestPoint(2));
+    set(handles.zMinEdit, 'String', bestValue);  
+    
+    hold on;
+    plot3(handles.mainAxes, path(1,:), path(2,:), values,...
+                    '--rs','LineWidth',1,...
+                    'MarkerEdgeColor','r',...
+                    'MarkerFaceColor','r',...
+                    'MarkerSize',2)
+    plot3(handles.mainAxes, bestPoint(1), bestPoint(2), bestValue,...
+                    '--rs','LineWidth',5,...
+                    'MarkerEdgeColor','y',...
+                    'MarkerFaceColor','y',...
+                    'MarkerSize',10)
+    hold off;  
 end
 
 function setButton_Callback(hObject, eventdata, handles)
@@ -184,11 +243,17 @@ function okFunctionExpressionButton_Callback(hObject, eventdata, handles)
     defineParameters(handles);
 end
 
+
 function buildGrapgicButton_Callback(hObject, eventdata, handles)
     global NAMES% --- GLOBAL DEFINE   
     global PARAMETERS% --- GLOBAL DEFINE   
     global FUNCTION_EXPRESSION% --- GLOBAL DEFINE    
      
+    if max(size(NAMES)) > 2
+        msgbox( 'Function must have only one or two parameters!' , 'Bad function expression' ); 
+        return;
+    end
+    
     quantity = max(size(NAMES));
     if isequal(quantity, 1)
         rotate3d off;
@@ -201,7 +266,21 @@ function buildGrapgicButton_Callback(hObject, eventdata, handles)
     end           
 end
 
-
+function buildContourButton_Callback(hObject, eventdata, handles)
+    global NAMES% --- GLOBAL DEFINE   
+    global PARAMETERS% --- GLOBAL DEFINE   
+    global FUNCTION_EXPRESSION% --- GLOBAL DEFINE    
+     
+    if ~isequal(max(size(NAMES)), 2)
+        msgbox( 'Function must have only two parameters!' , 'Bad function expression' ); 
+        return;
+    end   
+     
+    rotate3d off;
+    [xM, yM, zM] = graphicBuilder(FUNCTION_EXPRESSION, NAMES, PARAMETERS(:, 1), PARAMETERS(:, 2), PARAMETERS(:, 3));
+    [C, h] = contour(xM, yM, zM);
+    clabel(C, h);  
+end
 
 function defineParameters(handles)
     global NAMES% --- GLOBAL DEFINE   
@@ -309,3 +388,6 @@ end
 function [parameterString] = format(name, initial, min, max)
     parameterString = sprintf('%20s %20s %20s %20s\n', num2str(name), num2str(initial), num2str(min), num2str(max));
 end
+
+
+
