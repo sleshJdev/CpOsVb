@@ -38,7 +38,7 @@ end
 
 
 % --------------------------- listeners --------------------------- %
-function bisectionButton_Callback(hObject, eventdata, handles)   
+function dichotomyButton_Callback(hObject, eventdata, handles)   
     global NAMES% --- GLOBAL DEFINE   
     global PARAMETERS% --- GLOBAL DEFINE   
     global FUNCTION_EXPRESSION% --- GLOBAL DEFINE    
@@ -59,7 +59,7 @@ function bisectionButton_Callback(hObject, eventdata, handles)
     stepSize = str2double(get(handles.bisectionStepSizeEdit, 'String'));
     
     targetFunction = @(x) double( subs(FUNCTION_EXPRESSION, NAMES, x) );    
-    [~, ~, xMin, yMin] = bisection(minX, maxX, stepSize, targetFunction);
+    [~, ~, xMin, yMin] = dichotomy(minX, maxX, stepSize, targetFunction);
     
     set(handles.xMinEdit, 'String', xMin);
     set(handles.yMinEdit, 'String', yMin);
@@ -388,6 +388,3 @@ end
 function [parameterString] = format(name, initial, min, max)
     parameterString = sprintf('%20s %20s %20s %20s\n', num2str(name), num2str(initial), num2str(min), num2str(max));
 end
-
-
-

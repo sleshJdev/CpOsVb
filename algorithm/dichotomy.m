@@ -1,4 +1,4 @@
-function [ x, y, xMin, yMin ] = bisection(xLeft, xRight, stepSize, targetFunction)
+function [ x, y, xMin, yMin ] = dichotomy(xLeft, xRight, stepSize, targetFunction)
     xMin   = (xLeft + xRight) / 2;
     yMin   = targetFunction(xMin);
     
