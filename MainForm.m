@@ -183,7 +183,7 @@ function steepestGradientButton_Callback(hObject, eventdata, handles)
     precession1 = str2double(get(handles.steepestGradientPrecessionByGradientLengthEdit, 'String')) ;
     precession2 = str2double(get(handles.steepestGradientPrecessionByShiftEdit, 'String'));
     limitSteps  = str2double(get(handles.steepestGradientMaxQuantityOfStepsEdit, 'String'));
-       
+    
     [bestPoint, bestValue, path, values, ~] =...
         steepestGradient(FUNCTION_EXPRESSION, NAMES, originPoint, lowerBorder, upperBorder, precession1, precession2, limitSteps);
     
