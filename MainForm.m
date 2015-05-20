@@ -38,6 +38,36 @@ end
 
 
 % --------------------------- listeners --------------------------- %
+function finderButton_Callback(hObject, eventdata, handles)
+    global NAMES% --- GLOBAL DEFINE   
+    global PARAMETERS% --- GLOBAL DEFINE   
+    global FUNCTION_EXPRESSION% --- GLOBAL DEFINE    
+    
+    if ~isequal(max(size(NAMES)), 1)
+        msgbox( 'Function must have only one parameter!' , 'Bad function expression' ); 
+        return;
+    end
+    
+    % define symbolic variable  
+    for i = 1 : max(size(NAMES))                 
+        eval(sprintf('syms %s', NAMES{i}));
+        eval(sprintf('%s = %d;', NAMES{i}, PARAMETERS(i, 1))); 
+    end   
+    minX = min(PARAMETERS(:, 2));
+    maxX = max(PARAMETERS(:, 3));   
+    
+    targetFunction = @(x) double( subs(FUNCTION_EXPRESSION, NAMES, x) );    
+    [~, ~, xMin, yMin] = dichotomy(minX, maxX, 0.01, targetFunction);
+    
+    set(handles.xMinEdit, 'String', xMin);
+    set(handles.yMinEdit, 'String', yMin);
+    set(handles.zMinEdit, 'String', '-');  
+    
+    hold on;
+    plot(handles.mainAxes, xMin, yMin, 'rs');
+    hold off;
+end
+
 function dichotomyButton_Callback(hObject, eventdata, handles)   
     global NAMES% --- GLOBAL DEFINE   
     global PARAMETERS% --- GLOBAL DEFINE   
@@ -203,6 +233,10 @@ function steepestGradientButton_Callback(hObject, eventdata, handles)
                     'MarkerFaceColor','y',...
                     'MarkerSize',10)
     hold off;  
+end
+
+function finderButton_Callback(hObject, eventdata, handles)
+
 end
 
 function setButton_Callback(hObject, eventdata, handles)
